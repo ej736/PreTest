@@ -12,6 +12,17 @@ import numpy as np
 
 ## Function to define the wanted data structure
 def define_dataframe_structure(column_specs):
+    """
+    Define the structure of a DataFrame.
+
+    Parameters:
+    columns (list of str): A list of column names for the DataFrame.
+    dtypes (dict): A dictionary mapping column names to their respective data types.
+    index (str or None): The name of the index column (default: None).
+
+    Returns:
+    pd.DataFrame: A DataFrame with the specified structure.
+    """
     # Prepare data dictionary
     data = {}
     max_length = 0
@@ -31,6 +42,18 @@ def define_dataframe_structure(column_specs):
 
 ## Function to simulate data
 def simulate_data(seed_df, n_points=100, col_specs=None, random_state=None):
+    """
+    Simulate data points based on representative points from a seed DataFrame.
+
+    Parameters:
+    seed_df (pd.DataFrame): A DataFrame containing representative points for simulation.
+    n_points (int): The number of simulated data points to generate for each representative (default: 100).
+    col_specs (dict): A dictionary specifying the distribution and variance for each column (default: None).
+    random_state (int or None): Seed for the random number generator for reproducibility (default: None).
+
+    Returns:
+    pd.DataFrame: A DataFrame containing the simulated data points.
+    """
     if random_state is not None:
         np.random.seed(random_state)
     
@@ -56,3 +79,56 @@ def simulate_data(seed_df, n_points=100, col_specs=None, random_state=None):
             simulated_data.append(simulated_point)
     
     return pd.DataFrame(simulated_data)
+
+import numpy as np
+import pandas as pd
+
+def define_dataframe_structure():
+    """
+    Define the structure of the DataFrame to be used for simulation.
+    This function returns an empty DataFrame with predefined columns.
+    """
+    return pd.DataFrame(columns=['x', 'y', 'cluster_label'])
+
+def non_globular_cluster(seed_df, num_points, cluster_shape='spiral', noise_level=0.1):
+    """
+    Simulates non-globular clusters of data points.
+
+    Parameters:
+    - seed_df: DataFrame structure created by define_dataframe_structure().
+    - num_points: Number of points to simulate.
+    - cluster_shape: The shape of the cluster ('spiral', 'elongated', etc.).
+    - noise_level: The level of noise to add to the points.
+
+    Returns:
+    - DataFrame containing the simulated non-globular cluster points.
+    """
+    np.random.seed(42)  # For reproducibility
+    points = []
+
+    if cluster_shape == 'spiral':
+        # Generate points in a spiral shape
+        theta = np.linspace(0, 4 * np.pi, num_points)  # Angle
+        r = np.linspace(0, 1, num_points)  # Radius
+        x = r * np.sin(theta) + np.random.normal(0, noise_level, num_points)
+        y = r * np.cos(theta) + np.random.normal(0, noise_level, num_points)
+        points = np.column_stack((x, y))
+
+    elif cluster_shape == 'elongated':
+        # Generate points in an elongated shape
+        t = np.linspace(0, 2 * np.pi, num_points)
+        x = 2 * np.sin(t) + np.random.normal(0, noise_level, num_points)  # Elongated in x
+        y = np.cos(t) + np.random.normal(0, noise_level, num_points)  # Regular in y
+        points = np.column_stack((x, y))
+
+    else:
+        raise ValueError("Unsupported cluster shape. Choose 'spiral' or 'elongated'.")
+
+    # Create a DataFrame from the points
+    cluster_df = pd.DataFrame(points, columns=['x', 'y'])
+    cluster_df['cluster_label'] = 'non-globular'
+
+    # Combine with the seed DataFrame if needed
+    result_df = pd.concat([seed_df, cluster_df], ignore_index=True)
+
+    return result_df
